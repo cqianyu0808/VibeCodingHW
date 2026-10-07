@@ -50,12 +50,19 @@
     <footer>餐點清單會儲存在這個瀏覽器中。</footer>
   </main>
   <script>
-    const defaults = ['牛肉麵', '滷肉飯', '水餃', '咖哩飯', '義大利麵', '便當'];
+    const addedMeals = ['煎餃', '麻辣燙', '關東煮', '烤串', '燒烤', '火鍋', '夜市', '早午餐餐盤', '健康餐盒', '早餐店', '便利商店', '肉圓', '酸菜魚', '滷味', '麥當勞', '鼎泰豐', '瓦城'];
+    const defaults = ['牛肉麵', '滷肉飯', '水餃', '咖哩飯', '義大利麵', '便當', ...addedMeals];
     const key = 'what-to-eat-meals-v1';
     let meals = [...defaults];
     try {
       const stored = JSON.parse(localStorage.getItem(key));
       if (Array.isArray(stored) && stored.every(item => typeof item === 'string' && item.trim() && item.length <= 30)) meals = stored;
+      // 舊版清單只補入這次新增的選項一次，保留使用者自己的餐點。
+      if (localStorage.getItem(key + '-options-20261006') !== '1') {
+        meals = [...new Set([...meals, ...addedMeals])];
+        localStorage.setItem(key, JSON.stringify(meals));
+        localStorage.setItem(key + '-options-20261006', '1');
+      }
     } catch (_) {}
     const list = document.getElementById('meals');
     const result = document.getElementById('result');
