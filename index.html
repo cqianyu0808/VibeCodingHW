@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>今天吃什麼？</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; padding: 40px 20px; background: #fff7ed; color: #422c20; font-family: system-ui, sans-serif; }
+    main { max-width: 540px; margin: auto; }
+    header { text-align: center; margin-bottom: 28px; }
+    h1 { font-size: 34px; margin: 12px 0; }
+    p { color: #806758; line-height: 1.6; }
+    .card { background: white; border: 1px solid #f1dfce; border-radius: 24px; padding: 28px; box-shadow: 0 12px 35px #6d3e1510; margin-bottom: 20px; }
+    .draw { text-align: center; }
+    #result { font-size: 30px; font-weight: bold; min-height: 90px; display: grid; place-items: center; overflow-wrap: anywhere; }
+    button, input { font: inherit; border-radius: 12px; }
+    button { cursor: pointer; border: 0; padding: 12px 18px; }
+    button:focus-visible, input:focus-visible { outline: 3px solid #8c4a16; outline-offset: 3px; }
+    #pick { width: 100%; background: #ea6b26; color: white; font-weight: bold; font-size: 18px; }
+    #pick:hover { background: #ce5515; }
+    h2 { margin-top: 0; font-size: 20px; }
+    form { display: flex; gap: 8px; }
+    input { min-width: 0; width: 100%; border: 1px solid #d7c4b6; padding: 12px; }
+    form button { background: #422c20; color: white; flex-shrink: 0; }
+    #message { font-size: 14px; min-height: 24px; margin: 10px 0; }
+    ul { list-style: none; padding: 0; margin: 0; }
+    li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f5ece4; }
+    li span { overflow-wrap: anywhere; min-width: 0; }
+    .remove { background: #fff1e6; color: #98430f; padding: 7px 12px; flex-shrink: 0; }
+    footer { text-align: center; color: #806758; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <main>
+    <header><div style="font-size:48px" aria-hidden="true">🍽️</div><h1>今天吃什麼？</h1><p>選擇困難的時候，讓我幫你決定！</p></header>
+    <section class="card draw" aria-label="隨機選餐點">
+      <div id="result" role="status" aria-live="polite">準備好開吃了嗎？</div>
+      <button id="pick" type="button">幫我選！</button>
+    </section>
+    <section class="card">
+      <h2>我的餐點清單 <small id="count"></small></h2>
+      <form id="add-form">
+        <input id="meal-input" aria-label="餐點名稱" placeholder="例如：牛肉麵" maxlength="30" required>
+        <button type="submit">新增</button>
+      </form>
+      <p id="message" role="status" aria-live="polite"></p>
+      <ul id="meals"></ul>
+    </section>
+    <footer>餐點清單會儲存在這個瀏覽器中。</footer>
+  </main>
+  <script>
+    const defaults = ['牛肉麵', '滷肉飯', '水餃', '咖哩飯', '義大利麵', '便當'];
+    const key = 'what-to-eat-meals-v1';
+    let meals = [...defaults];
+    try {
+      const stored = JSON.parse(localStorage.getItem(key));
+      if (Array.isArray(stored) && stored.every(item => typeof item === 'string' && item.trim() && item.length <= 30)) meals = stored;
+    } catch (_) {}
+    const list = document.getElementById('meals');
+    const result = document.getElementById('result');
+    const message = document.getElementById('message');
+    const input = document.getElementById('meal-input');
+    function save() {
+      try { localStorage.setItem(key, JSON.stringify(meals)); }
+      catch (_) { message.textContent = '目前無法儲存，重新整理後可能會重設清單。'; }
+    }
+    function render() {
+      list.replaceChildren();
+      document.getElementById('count').textContent = `（${meals.length} 道）`;
+      if (!meals.length) {
+        const empty = document.createElement('li');
+        empty.textContent = '清單是空的，先新增一道餐點吧！';
+        list.append(empty);
+      }
+      meals.forEach((meal, index) => {
+        const row = document.createElement('li');
+        const label = document.createElement('span');
+        label.textContent = meal;
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'remove';
+        remove.textContent = '刪除';
+        remove.setAttribute('aria-label', `刪除${meal}`);
+        remove.addEventListener('click', () => {
+          meals.splice(index, 1);
+          message.textContent = `已刪除「${meal}」。`;
+          result.textContent = '準備好開吃了嗎？';
+          save(); render();
+        });
+        row.append(label, remove); list.append(row);
+      });
+    }
+    document.getElementById('pick').addEventListener('click', () => {
+      result.textContent = meals.length ? meals[Math.floor(Math.random() * meals.length)] : '先新增餐點吧！';
+    });
+    document.getElementById('add-form').addEventListener('submit', event => {
+      event.preventDefault();
+      const meal = input.value.trim();
+      if (!meal) { message.textContent = '請輸入餐點名稱。'; return; }
+      if (meals.includes(meal)) { message.textContent = '這道餐點已經在清單裡了！'; return; }
+      meals.push(meal);
+      input.value = '';
+      message.textContent = `已新增「${meal}」。`;
+      save(); render(); input.focus();
+    });
+    render();
+  </script>
+</body>
+</html>
