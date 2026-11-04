@@ -29,3 +29,4 @@ if (form) {
   form.addEventListener("input", clearResult);
   form.addEventListener("reset", clearResult);
 }
+

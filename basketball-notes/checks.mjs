@@ -68,3 +68,4 @@ for (const type of ["input","reset"]) check(type+" 清除舊結果及錯誤",()=
 });
 check("沒有表單的頁面可安全載入程式",()=>vm.runInNewContext(fs.readFileSync(path.join(root,"assets/app.js"),"utf8"),{document:{getElementById:()=>null}}));
 console.log("完成："+count+" 項檢查通過。此檢查不取代瀏覽器視覺與鍵盤操作驗證。");
+
